@@ -456,6 +456,14 @@ VkResult validate_requested_layer_features(VkPhysicalDevice physical_device, con
    return VK_SUCCESS;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+int drmIsKMS(int fd);
+#ifdef __cplusplus
+}
+#endif
+
 /* The Mali kernel driver has no DRM device, so its Vulkan driver cannot offer VK_EXT_physical_device_drm - and
  * Mesa then cannot tie a DRM device to it: zink can back neither gbm nor EGL on a DRM device, which a compositor on
  * zink needs, and zink clients of any compositor that names its DRM device (Wayland dma-buf feedback) fall back to

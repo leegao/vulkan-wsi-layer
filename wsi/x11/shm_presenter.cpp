@@ -300,8 +300,10 @@ void shm_presenter::copy_pixels_scalar(const uint32_t *src_pixels, uint32_t *dst
 {
    uint32_t src_width = src_stride_pixels;
 
-   if (src_width == dst_width &&
-       (m_scaling_lut.empty() || (dst_width > 0 && m_scaling_lut[dst_width - 1] == dst_width - 1)))
+   // if (src_width == dst_width &&
+   //     (m_scaling_lut.empty() || (dst_width > 0 && m_scaling_lut[dst_width - 1] == dst_width - 1)))
+   if (m_scaling_lut.empty() ||
+       (src_width == dst_width && dst_width > 0 && m_scaling_lut[dst_width - 1] == dst_width - 1))
    {
       size_t copy_size = dst_width * sizeof(uint32_t);
       for (uint32_t row = 0; row < height; row++)

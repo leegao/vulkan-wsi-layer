@@ -1,3 +1,4 @@
+#include <cstring>
 /*
  * Copyright (c) 2025-2026 Arm Limited.
  *
@@ -60,6 +61,18 @@ dri3_presenter::~dri3_presenter()
 
 bool dri3_presenter::is_available(xcb_connection_t *connection, surface * /*wsi_surface*/)
 {
+   /* When running under the userspace Mali Kbase emulator (libmali_kbase_emu.so),
+    * /dev/dma_heap/system is backed by an in-process memfd rather than a kernel DRM
+    * PRIME dma-buf, so the external host X11 server rejects xcb_dri3_pixmap_from_buffers
+    * and never delivers XCB_PRESENT_IDLE_NOTIFY after minImageCount frames. Fall back
+    * automatically to the MIT-SHM presenter unless WSI_X11_FORCE_DRI3=1 is set. */
+   if (getenv("WSI_X11_FORCE_DRI3") == nullptr &&
+       (getenv("MALI_EMU_PROFILE") != nullptr || getenv("KBASE_EMU_LOG_LEVEL") != nullptr ||
+        (getenv("LD_PRELOAD") != nullptr && strstr(getenv("LD_PRELOAD"), "libmali_kbase_emu") != nullptr)))
+   {
+      WSI_LOG_INFO("Userspace Mali Kbase emulator detected; using X11 SHM presenter instead of DRI3");
+      return false;
+   }
    const xcb_query_extension_reply_t *dri3_ext = xcb_get_extension_data(connection, &xcb_dri3_id);
    if (dri3_ext == nullptr || !dri3_ext->present)
    {

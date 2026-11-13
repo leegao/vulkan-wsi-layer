@@ -303,11 +303,19 @@ GetPhysicalDeviceXcbPresentationSupportKHR(VkPhysicalDevice physicalDevice, uint
                                            xcb_connection_t *connection, xcb_visualid_t visual_id)
 {
    UNUSED(queueFamilyIndex);
-   bool dev_supports_sync =
-      sync_fd_fence_sync::is_supported(layer::instance_private_data::get(physicalDevice), physicalDevice);
-   if (!dev_supports_sync)
+   bool kbase_emu_shm =
+      (getenv("WSI_X11_FORCE_DRI3") == nullptr &&
+       (getenv("MALI_EMU_PROFILE") != nullptr || getenv("KBASE_EMU_LOG_LEVEL") != nullptr ||
+        getenv("KBASE_EMU_LOG") != nullptr ||
+        (getenv("LD_PRELOAD") != nullptr && strstr(getenv("LD_PRELOAD"), "libmali_kbase_emu") != nullptr)));
+   if (!kbase_emu_shm)
    {
-      return VK_FALSE;
+      bool dev_supports_sync =
+         sync_fd_fence_sync::is_supported(layer::instance_private_data::get(physicalDevice), physicalDevice);
+      if (!dev_supports_sync)
+      {
+         return VK_FALSE;
+      }
    }
 
    if (!visual_supported(connection_get_visualtype(connection, visual_id)))
